@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Camera Aperture & Scanner HUD -->
+    <!-- Top-left bracket -->
+    <path
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M34,42 L34,34 L42,34" />
+    <!-- Top-right bracket -->
+    <path
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M66,34 L74,34 L74,42" />
+    <!-- Bottom-left bracket -->
+    <path
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M34,66 L34,74 L42,74" />
+    <!-- Bottom-right bracket -->
+    <path
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="3.2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000"
+        android:pathData="M66,74 L74,74 L74,66" />
+
+    <!-- Center Pulse Hexagon / Iris -->
+    <path
+        android:fillColor="#15273C"
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="2.5"
+        android:pathData="M54,41 L65,47 L65,61 L54,67 L43,61 L43,47 Z" />
+
+    <!-- AI Core Spark (Electric Orange) -->
+    <path
+        android:fillColor="#FF7A00"
+        android:pathData="M54,46 L57,52 L63,54 L57,56 L54,62 L51,56 L45,54 L51,52 Z" />
+
+    <!-- Speed Scan Line -->
+    <path
+        android:strokeColor="#00F2FE"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M38,54 L44,54" />
+    <path
+        android:strokeColor="#FF7A00"
+        android:strokeWidth="2.2"
+        android:strokeLineCap="round"
+        android:pathData="M64,54 L70,54" />
+</vector>

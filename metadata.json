@@ -1,0 +1,6 @@
+{
+  "name": "GlanceFlow",
+  "description": "Offline-first AI productivity system that captures real-world info into structured, actionable Glance Cards.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
