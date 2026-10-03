@@ -24,6 +24,7 @@ Snap a photo of a messy classroom blackboard, record a fast voice memo, or paste
 - **Optical CameraX Viewfinder**: High-performance camera preview with technical crosshairs, dynamic laser reticle, front/rear lens switching, torch/flash controls, and image enhancement curves.
 - **Kinetic AI Synthesis**: Live multi-stage kinetic transformation: `CAPTURED` ➔ `READING YOUR WORLD` ➔ `UNDERSTANDING` ➔ `STRUCTURING` ➔ `I FOUND WHAT MATTERS`.
 - **Zero-Cloud Companion Sync**: Embedded lightweight HTTP server serving a live web dashboard directly to your laptop over local Wi-Fi without third-party servers.
+- **Smart Unfinished Assignment Notification Engine**: Monitors coursework and pending tasks, scheduling background `AlarmManager` alerts with interactive notification actions (`MARK DONE` & `SNOOZE 1H`) directly in the notification shade.
 - **Room Database Local Persistence**: SQLite database caching active, completed, and archived glances with instant reactive Kotlin Flows.
 
 ---

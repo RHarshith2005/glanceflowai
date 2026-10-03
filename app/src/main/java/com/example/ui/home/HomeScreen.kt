@@ -29,6 +29,7 @@ import androidx.compose.material.icons.automirrored.filled.TextSnippet
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.KeyboardVoice
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -100,6 +101,7 @@ fun HomeScreen(
     var showActiveActionPoster by remember { mutableStateOf(false) }
 
     val urgentCount = activeGlances.count { it.priority == GlancePriority.HIGH }
+    val unfinishedAssignments by viewModel.unfinishedAssignments.collectAsState()
     val dueTodayCount = activeGlances.count {
         it.deadline?.contains("Today", ignoreCase = true) == true ||
         it.deadline?.contains("Friday", ignoreCase = true) == true
@@ -240,6 +242,78 @@ fun HomeScreen(
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // UNFINISHED ASSIGNMENTS SMART NOTIFICATION BANNER
+            if (unfinishedAssignments.isNotEmpty()) {
+                item {
+                    Surface(
+                        onClick = { viewModel.notifyUnfinishedAssignmentsNow() },
+                        color = CharcoalDark,
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.2.dp, AcidYellow.copy(alpha = 0.8f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(AcidYellow.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.NotificationsActive,
+                                        contentDescription = null,
+                                        tint = AcidYellow,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = "${unfinishedAssignments.size} UNFINISHED ASSIGNMENT${if (unfinishedAssignments.size > 1) "S" else ""}",
+                                        fontFamily = FontFamily.Monospace,
+                                        fontWeight = FontWeight.Black,
+                                        color = PaperWhite,
+                                        fontSize = 12.sp,
+                                        letterSpacing = 0.5.sp
+                                    )
+                                    Text(
+                                        text = "Tap to dispatch rich notifications & task checklist",
+                                        color = SubtitleGray,
+                                        fontSize = 11.sp
+                                    )
+                                }
+                            }
+
+                            Surface(
+                                color = AcidYellow,
+                                shape = RoundedCornerShape(4.dp)
+                            ) {
+                                Text(
+                                    text = "ALERT",
+                                    fontFamily = FontFamily.Monospace,
+                                    fontWeight = FontWeight.Black,
+                                    color = VoidBlack,
+                                    fontSize = 9.sp,
+                                    letterSpacing = 0.8.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(18.dp))
+                }
             }
 
             // CRITICAL ACTION POSTER TRIGGER ("DO IT NOW" SCREEN 2 SHORTCUT)

@@ -31,6 +31,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -94,6 +95,17 @@ class GlanceViewModel(application: Application) : AndroidViewModel(application) 
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
+    // Real-time monitored stream of unfinished assignments with pending tasks
+    val unfinishedAssignments: StateFlow<List<GlanceItem>> = activeGlances.map { list ->
+        list.filter { glance ->
+            !glance.completed && (
+                glance.category == GlanceCategory.ASSIGNMENT ||
+                glance.category == GlanceCategory.EXAM ||
+                glance.tasks.any { !it.isCompleted }
+            )
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
     // Processing animation state
     private val _processingStep = MutableStateFlow<ProcessingStep>(ProcessingStep.Idle)
     val processingStep: StateFlow<ProcessingStep> = _processingStep.asStateFlow()
@@ -123,6 +135,7 @@ class GlanceViewModel(application: Application) : AndroidViewModel(application) 
 
     init {
         checkAndSeedInitialData()
+        notificationManager.schedulePeriodicAssignmentChecks(intervalHours = 3)
     }
 
     private fun checkAndSeedInitialData() {
@@ -301,7 +314,33 @@ class GlanceViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun scheduleReminder(glance: GlanceItem) {
-        notificationManager.showGlanceReminder(glance)
+        notificationManager.notifyUnfinishedAssignment(glance)
+    }
+
+    /**
+     * Instantly triggers rich interactive notifications for all active unfinished assignments and tasks
+     */
+    fun notifyUnfinishedAssignmentsNow() {
+        viewModelScope.launch {
+            val unfinished = unfinishedAssignments.value
+            if (unfinished.isNotEmpty()) {
+                unfinished.take(3).forEach { assignment ->
+                    notificationManager.notifyUnfinishedAssignment(assignment)
+                }
+                if (unfinished.size > 1) {
+                    notificationManager.notifyUnfinishedAssignmentsSummary(unfinished)
+                }
+            } else {
+                // If all assignments are complete, trigger the featured or first glance as demo
+                activeGlances.value.firstOrNull()?.let {
+                    notificationManager.notifyUnfinishedAssignment(it)
+                }
+            }
+        }
+    }
+
+    fun scheduleAssignmentDeadlineAlarm(glance: GlanceItem, delayMinutes: Long) {
+        notificationManager.scheduleSnooze(glance.id, delayMinutes * 60 * 1000L)
     }
 
     private suspend fun seedClassroomDemoData() {

@@ -1,6 +1,9 @@
 package com.example.ui.settings
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,10 +27,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AirplanemodeActive
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Security
@@ -53,6 +59,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import com.example.ai.understanding.AIEngineMode
 import com.example.ui.components.StatusPill
 import com.example.ui.theme.AcidYellow
@@ -82,6 +89,18 @@ fun SettingsScreen(
     val aiEngineMode by viewModel.aiEngineMode.collectAsState()
     val benchmarkResult by viewModel.benchmarkResult.collectAsState()
     val isBenchmarking by viewModel.isBenchmarking.collectAsState()
+    val unfinishedList by viewModel.unfinishedAssignments.collectAsState()
+
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            viewModel.notifyUnfinishedAssignmentsNow()
+            Toast.makeText(context, "Notifications enabled! Dispatched alerts for unfinished assignments.", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Please allow notification permission to receive assignment alerts", Toast.LENGTH_LONG).show()
+        }
+    }
 
     val filePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -391,6 +410,186 @@ fun SettingsScreen(
                         color = CyberTextSecondary,
                         fontSize = 12.sp
                     )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        // UNFINISHED ASSIGNMENT NOTIFICATIONS & DEADLINE MONITOR
+        item {
+            Surface(
+                color = CyberSurfaceElevated,
+                shape = RoundedCornerShape(18.dp),
+                border = androidx.compose.foundation.BorderStroke(1.2.dp, AcidYellow.copy(alpha = 0.8f)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(AcidYellow.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.NotificationsActive,
+                                    contentDescription = null,
+                                    tint = AcidYellow,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Assignment Notifications", fontWeight = FontWeight.Black, color = CyberTextPrimary, fontSize = 16.sp)
+                                Text("Coursework & Task Deadlines", color = AcidYellow, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        Surface(
+                            color = AcidYellow.copy(alpha = 0.2f),
+                            shape = RoundedCornerShape(4.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, AcidYellow)
+                        ) {
+                            Text(
+                                text = "${unfinishedList.size} UNFINISHED",
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Black,
+                                color = AcidYellow,
+                                modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    Text(
+                        text = "GlanceFlow monitors all coursework, assignments, and incomplete tasks in your local database. Notifications feature direct 'Mark Complete' and 'Snooze' actions in the notification shade.",
+                        color = CyberTextSecondary,
+                        fontSize = 12.sp,
+                        lineHeight = 17.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(14.dp))
+
+                    // Unfinished Coursework Preview
+                    if (unfinishedList.isNotEmpty()) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(CyberSurface)
+                                .padding(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = "MONITORED UNFINISHED COURSEWORK:",
+                                fontFamily = FontFamily.Monospace,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Black,
+                                color = AcidYellow,
+                                letterSpacing = 1.sp
+                            )
+
+                            unfinishedList.take(3).forEach { item ->
+                                val pendingTasks = item.tasks.count { !it.isCompleted }
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            text = item.title,
+                                            fontWeight = FontWeight.Bold,
+                                            color = CyberTextPrimary,
+                                            fontSize = 12.sp,
+                                            maxLines = 1
+                                        )
+                                        Text(
+                                            text = "Due: ${item.deadline ?: "Upcoming"} • $pendingTasks pending tasks",
+                                            fontFamily = FontFamily.Monospace,
+                                            fontSize = 10.sp,
+                                            color = CyberTextMuted
+                                        )
+                                    }
+
+                                    Surface(
+                                        onClick = { viewModel.scheduleReminder(item) },
+                                        color = CyberSurfaceElevated,
+                                        shape = RoundedCornerShape(4.dp),
+                                        border = androidx.compose.foundation.BorderStroke(1.dp, CyberBorder)
+                                    ) {
+                                        Text(
+                                            text = "ALERT",
+                                            fontFamily = FontFamily.Monospace,
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = CyberTextPrimary,
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Trigger All Notifications Button
+                    Button(
+                        onClick = {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                                    viewModel.notifyUnfinishedAssignmentsNow()
+                                    Toast.makeText(context, "Dispatched alerts for unfinished assignments!", Toast.LENGTH_SHORT).show()
+                                } else {
+                                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                }
+                            } else {
+                                viewModel.notifyUnfinishedAssignmentsNow()
+                                Toast.makeText(context, "Dispatched alerts for unfinished assignments!", Toast.LENGTH_SHORT).show()
+                            }
+                        },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = AcidYellow,
+                            contentColor = CyberBlack
+                        ),
+                        shape = RoundedCornerShape(8.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.NotificationsActive, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "TRIGGER ASSIGNMENT NOTIFICATIONS NOW",
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Black,
+                            fontSize = 11.sp,
+                            letterSpacing = 0.5.sp
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(modifier = Modifier.size(6.dp).clip(CircleShape).background(MatrixGreen))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("BACKGROUND ALARMS: ACTIVE", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = MatrixGreen, fontWeight = FontWeight.Bold)
+                        }
+                        Text("INTERVAL: EVERY 3 HOURS", fontFamily = FontFamily.Monospace, fontSize = 9.sp, color = CyberTextMuted)
+                    }
                 }
             }
 

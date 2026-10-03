@@ -24,6 +24,9 @@ interface GlanceDao {
     @Query("SELECT * FROM glance_items ORDER BY createdAt DESC")
     suspend fun getAllGlancesSnapshot(): List<GlanceEntity>
 
+    @Query("SELECT * FROM glance_items WHERE archived = 0 AND completed = 0 ORDER BY createdAt DESC")
+    suspend fun getActiveGlancesSnapshot(): List<GlanceEntity>
+
     @Query("SELECT * FROM glance_items WHERE id = :id LIMIT 1")
     suspend fun getGlanceById(id: Long): GlanceEntity?
 
